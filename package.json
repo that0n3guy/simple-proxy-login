@@ -1,0 +1,14 @@
+{
+  "name": "simple-proxy-login",
+  "version": "1.0.0",
+  "description": "Simple login-protected reverse proxy with websocket support",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "express-session": "^1.18.0",
+    "http-proxy-middleware": "^3.0.0"
+  }
+}
