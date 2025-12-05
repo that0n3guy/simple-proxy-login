@@ -2,6 +2,27 @@
 
 Simple login-protected reverse proxy with websocket support. Put it in front of any web UI that needs authentication.
 
+## Quick Start
+
+```bash
+docker pull ghcr.io/that0n3guy/simple-proxy-login:latest
+
+docker run -d \
+  -p 3000:3000 \
+  -e PROXY_TARGET=http://your-app:8080 \
+  -e APP_NAME="My App" \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=yourpassword \
+  -e SESSION_SECRET=$(openssl rand -hex 32) \
+  ghcr.io/that0n3guy/simple-proxy-login:latest
+```
+
+## Image
+
+```
+ghcr.io/that0n3guy/simple-proxy-login:latest
+```
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |
