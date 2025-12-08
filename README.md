@@ -125,6 +125,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       SESSION_SECRET: ${SESSION_SECRET}
+      BYPASS_PATHS=/v1/e,/v0/e,/api/v1
     depends_on:
       - inngest
     networks:
