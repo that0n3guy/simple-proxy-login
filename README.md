@@ -99,3 +99,80 @@ openssl rand -hex 32
 ## Logout
 
 Visit `/logout` to end your session.
+
+## Example Docker compose file using this container:
+
+```
+# Self-hosted Inngest Server for Dokploy deployment
+#
+# Environment variables to set in Dokploy:
+#   INNGEST_EVENT_KEY      - Must be hex string with even number of chars
+#   INNGEST_SIGNING_KEY    - Must be hex string with even number of chars
+#   INNGEST_POSTGRES_URI   - e.g., postgres://user:pass@host:5432/inngest
+#   ADMIN_USERNAME         - Login username for Inngest UI
+#   ADMIN_PASSWORD         - Login password for Inngest UI
+#   SESSION_SECRET         - Session encryption key (openssl rand -hex 32)
+
+services:
+  # Auth proxy for Inngest UI
+  auth-proxy:
+    image: ghcr.io/that0n3guy/simple-proxy-login:latest
+    ports:
+      - "8288:3000"
+    environment:
+      PROXY_TARGET: http://inngest:8288
+      APP_NAME: Inngest
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SESSION_SECRET: ${SESSION_SECRET}
+    depends_on:
+      - inngest
+    networks:
+      - inngest-network
+    restart: unless-stopped
+
+  inngest:
+    image: inngest/inngest:v1.14.0
+    command: "inngest start"
+    expose:
+      - "8288"  # Internal only - auth-proxy handles external access
+    ports:
+      - "8289:8289"  # Connect endpoint (no auth needed - uses signing key)
+    environment:
+      INNGEST_EVENT_KEY: ${INNGEST_EVENT_KEY}
+      INNGEST_SIGNING_KEY: ${INNGEST_SIGNING_KEY}
+      INNGEST_POSTGRES_URI: ${INNGEST_POSTGRES_URI}
+      INNGEST_REDIS_URI: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - inngest-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8288/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - inngest-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  inngest-network:
+    driver: bridge
+```
