@@ -12,6 +12,7 @@ const APP_NAME = process.env.APP_NAME || "Admin";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret-change-me";
+const BYPASS_PATHS = (process.env.BYPASS_PATHS || "").split(",").filter(Boolean);
 
 // Session
 app.use(session({
@@ -100,6 +101,13 @@ const proxy = createProxyMiddleware({
   }
 });
 
+// Bypass auth for configured paths (e.g., API endpoints with their own auth)
+BYPASS_PATHS.forEach(path => {
+  console.log(`[Bypass] ${path} (no auth required)`);
+  app.use(path, proxy);
+});
+
+// Everything else requires auth
 app.use("/", requireAuth, proxy);
 
 // Start server
